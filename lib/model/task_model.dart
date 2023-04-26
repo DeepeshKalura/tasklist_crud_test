@@ -3,19 +3,19 @@ import 'dart:convert';
 class TaskModel {
   final DateTime timeNeeded;
   final String taskName;
-  final int priority;
+  final String priority;
   bool isCompleted;
   TaskModel({
     required this.timeNeeded,
     required this.taskName,
     required this.priority,
-    this.isCompleted = false,
+    required this.isCompleted,
   });
 
   TaskModel copyWith({
     DateTime? timeNeeded,
     String? taskName,
-    int? priority,
+    String? priority,
     bool? isCompleted,
   }) {
     return TaskModel(
@@ -39,7 +39,7 @@ class TaskModel {
     return TaskModel(
       timeNeeded: DateTime.fromMillisecondsSinceEpoch(map['timeNeeded'] as int),
       taskName: map['taskName'] as String,
-      priority: map['priority'] as int,
+      priority: map['priority'] as String,
       isCompleted: map['isCompleted'] as bool,
     );
   }

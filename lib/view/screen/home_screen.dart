@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart' as uuid;
 
+import '../../controller/task_controller.dart';
 import '../../model/task_model.dart';
 import '../widget/container_use_widget.dart';
 
@@ -19,6 +21,14 @@ class HomeScreenState extends State<HomeScreen> {
   final TextEditingController _taskNameController = TextEditingController();
 
   final TextEditingController _priorityController = TextEditingController();
+  final TaskController _taskController = TaskController();
+
+  bool isIntialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   void _addTask(TaskModel task) {
     taskList.add(task);
@@ -116,6 +126,7 @@ class HomeScreenState extends State<HomeScreen> {
                           timeNeeded: selectedDate,
                           priority: _priorityController.text,
                           isCompleted: false,
+                          id: const uuid.Uuid().v4(),
                         ),
                       );
                       Navigator.pop(context);
@@ -132,25 +143,52 @@ class HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Task List'),
-      ),
-      body: ListView.builder(
-        itemCount: taskList.length,
-        itemBuilder: (BuildContext context, int index) {
-          return ContainerUseWidget(
-            title: taskList[index].taskName,
-            priority: taskList[index].priority,
-            date: taskList[index].timeNeeded.toString(),
-            isCompleted: taskList[index].isCompleted,
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddTaskDialog(),
-        tooltip: 'Add Task',
-        child: const Icon(Icons.add),
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Task List'),
+        ),
+        body: StreamBuilder(
+          stream: _taskController.getTaskList(),
+          builder: (context, snapshot) {
+            switch (snapshot.connectionState) {
+              case ConnectionState.none:
+                return const Scaffold(
+                  body: Center(
+                    child: Text("Error!"),
+                  ),
+                );
+              case ConnectionState.waiting:
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+
+              case ConnectionState.active:
+                return ListView.builder(
+                  itemCount: snapshot.data?.length ?? 0,
+                  itemBuilder: (BuildContext context, int index) {
+                    return ContainerUseWidget(
+                      title: taskList[index].taskName,
+                      priority: taskList[index].priority,
+                      date: taskList[index].timeNeeded.toString(),
+                      isCompleted: taskList[index].isCompleted,
+                    );
+                  },
+                );
+              case ConnectionState.done:
+                return const Scaffold(
+                  body: Center(
+                    child: Text("Error! With Done"),
+                  ),
+                );
+            }
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => _showAddTaskDialog(),
+          tooltip: 'Add Task',
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }
